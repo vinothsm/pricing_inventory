@@ -18,7 +18,9 @@ function Header() {
   return (
     <header className="header">
         <div className="container">
+            <h4>
             <Link to="/">PricingInventory</Link>
+            </h4>
         </div>
         <ul>
           {user ? (<li>

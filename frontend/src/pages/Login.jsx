@@ -69,9 +69,8 @@ function Login() {
     <>
       <section className='heading'>
         <h1>
-          <FaSignInAlt /> Login
+          Welcome! Please Login <FaSignInAlt />
         </h1>
-        <p>Login</p>
       </section>
       <section className='form'>
       <form onSubmit={onSubmit}>
