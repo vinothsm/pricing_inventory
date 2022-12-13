@@ -1,4 +1,5 @@
 import os
+import jwt
 import aiofiles
 from controllers.users import user
 from controllers.pricing import pricing
@@ -29,5 +30,16 @@ async def omo(request):
     ) as f:
         await f.write(request.files["file"][0].body)
     f.close()
-    process_file(app.config["upload"] + "/" + request.files["file"][0].name)
-    return response.json(True)
+    try:
+        user_id = jwt.decode(
+            request.token, request.app.config.SECRET, algorithms=["HS256"]
+        ).get("id", 0)
+        process_resp = process_file(
+            app.config["upload"] + "/" + request.files["file"][0].name, user_id
+        )
+        if process_resp[0]:
+            return response.json({"message": process_resp[1]}, 200)
+        else:
+            return response.json({"message": process_resp[1]}, 400)
+    except:
+        return response.json({"message": "Invalid token"}, 401)

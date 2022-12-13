@@ -48,22 +48,23 @@ export const getPricingRecords = createAsyncThunk(
   }
 );
 
-// export const pricingRecords = createAsyncThunk(
-//   "pricing/pricing_records",
-//   async (pageData, thunkAPI) => {
-//     try {
-//       return await pricingService.get_pricing_records(user);
-//     } catch (error) {
-//       const message =
-//         (error.response &&
-//           error.response.data &&
-//           error.response.data.message) ||
-//         error.message ||
-//         error.toString();
-//       return thunkAPI.rejectWithValue(message);
-//     }
-//   }
-// );
+export const filterPricingRecords = createAsyncThunk(
+  "pricing/filter_pricing_records",
+  async (filterData, thunkAPI) => {
+    try {
+      const token = thunkAPI.getState().auth.user.token;
+      return await pricingService.filterPricingRecords(filterData, token);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 
 export const pricingSlice = createSlice({
   name: "pricing",
@@ -116,6 +117,23 @@ export const pricingSlice = createSlice({
         state.totalSize = action.payload.total_records;
       })
       .addCase(getAllPricingRecords.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.products = null;
+      })
+      .addCase(filterPricingRecords.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(filterPricingRecords.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.products = JSON.parse(action.payload.records);
+        state.data = JSON.parse(action.payload.records).slice(0, 10);
+        state.sizePerPage = 10;
+        state.totalSize = action.payload.total_records;
+      })
+      .addCase(filterPricingRecords.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

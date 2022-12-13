@@ -1,5 +1,6 @@
 // import 'react-data-grid/lib/styles.css';
 // import DataGrid from 'react-data-grid';
+import axios from 'axios';
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -7,7 +8,12 @@ import BootstrapTable from "react-bootstrap-table-next";
 import paginationFactory from "react-bootstrap-table2-paginator";
 import cellEditFactory from "react-bootstrap-table2-editor";
 import filterFactory, { textFilter } from "react-bootstrap-table2-filter";
-import { getPricingRecords, getAllPricingRecords, reset } from '../features/pricing/pricingSlice';
+import "react-bootstrap-table2-filter/dist/react-bootstrap-table2-filter.min.css";
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
+import {toast} from 'react-toastify'
+
+
+import { getPricingRecords, getAllPricingRecords, filterPricingRecords, reset } from '../features/pricing/pricingSlice';
 import Spinner from '../components/Spinner'
 import FileUpload from "../components/FileUpload";
 
@@ -21,21 +27,25 @@ const columns = [
   {
     dataField: 'sku',
     text: 'sku',
+    filter: textFilter(),
     editable: true
   },
   {
     dataField: 'product_name',
     text: 'product_name',
+    filter: textFilter({className:"ff"}),
     editable: true
   },
   {
     dataField: 'price',
     text: 'price',
+    filter: textFilter(),
     editable: true
   },
   {
     dataField: 'date',
     text: 'date',
+    filter: textFilter(),
     editable: true
   }
 ];
@@ -56,6 +66,7 @@ const RemotePagination = ({ data, page, sizePerPage, onTableChange, totalSize })
       data={ data }
       columns={ columns }
       filter={ filterFactory() }
+      filterPosition="top"
       pagination={ paginationFactory({ page, sizePerPage, totalSize }) }
       cellEdit={ cellEditFactory(cellEditProps) }
       onTableChange={ onTableChange }
@@ -107,16 +118,40 @@ function Dashboard() {
   // handle filter
   const handleFilter = async(filter) => {
     console.log(filter);
+    const filterString = Object.keys(filter).map((key) => {
+      if (filter[key].filterVal) {
+        return `${key}=${filter[key].filterVal}`;
+      }
+      return null;
+    }).filter((f) => f).join('&');
+    console.log(filterString);
+
     // const response = await axios.get(`https://jsonplaceholder.typicode.com/comments?${filter}`)
     // setData(response.data);
+    dispatch(filterPricingRecords(filterString))
+
   }
 
   // handle cell edit
   const handleCellEdit = async(cellEdit) => {
-    console.log(cellEdit);
-    // const response = await axios.put(`https://jsonplaceholder.typicode.com/comments/${cellEdit.rowId}`, cellEdit)
-    // console.log(response);
-    // done();
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+      const dataUpdate = {"sku":cellEdit.rowId}
+      dataUpdate["data"] = {[cellEdit.dataField]:cellEdit.newValue}
+      const response = await axios.post("http://localhost:8200/pricing/update_pricing_records", dataUpdate, config)
+
+      toast.success(response.message);
+    } catch (err) {
+      if (err.response.status === 500) {
+        toast.error('There was a problem with the server');
+      } else {
+        toast.error(err.response.data.message);
+      }
+    }
   }
 
 
@@ -127,10 +162,7 @@ function Dashboard() {
       handlePagination(page, sizePerPage);
     }
     else if (type === 'cellEdit') {
-      console.log('====================================');
-      console.log('cellEdit', cellEdit);
       handleCellEdit(cellEdit);
-      console.log('====================================');
     }
     else if (type === 'filter') {
       console.log('====================================');

@@ -12,9 +12,10 @@ function Register() {
     email: '',
     password: '',
     password2: '',
+    storeId: ''
   })
 
-  const { name, email, password, password2 } = formData
+  const { name, email, password, password2, storeId } = formData
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
@@ -46,7 +47,7 @@ function Register() {
     if(password !== password2) {
       toast.error('Passwords do not match')
     }else{
-      const userData = {name, email, password}
+      const userData = {name, email, password, storeId}
       dispatch(register({userData}))
     }
   }
@@ -106,6 +107,17 @@ function Register() {
               name='password2'
               value={password2}
               placeholder='Confirm password'
+              onChange={onChange}
+            />
+          </div>
+          <div className='form-group'>
+            <input
+              type='text'
+              className='form-control'
+              id='storeId'
+              name='storeId'
+              value={storeId}
+              placeholder='Enter your store Id'
               onChange={onChange}
             />
           </div>

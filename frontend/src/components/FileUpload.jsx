@@ -19,36 +19,43 @@ const FileUpload = () => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('file', file);
-
-    try {
-      const res = await axios.post('http://localhost:8200/upload', formData, {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      const token = user.token;
+    
+      const config = {
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         },
-        // onUploadProgress: progressEvent => {
-        //   setUploadPercentage(
-        //     parseInt(
-        //       Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        //     )
-        //   );
-        // }
-      });
-      
-      // Clear percentage
-      // setTimeout(() => setUploadPercentage(0), 10000);
+      };
+      try {
+        const res = await axios.post('http://localhost:8200/upload', formData, config
+          // onUploadProgress: progressEvent => {
+          //   setUploadPercentage(
+          //     parseInt(
+          //       Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          //     )
+          //   );
+          // }
+        );
+        
+        // Clear percentage
+        // setTimeout(() => setUploadPercentage(0), 10000);
 
-      const { fileName, filePath } = res.data;
+        const { fileName, filePath } = res.data;
 
-      setUploadedFile({ fileName, filePath });
+        setUploadedFile({ fileName, filePath });
 
-      toast.success('File Uploaded');
-    } catch (err) {
-      if (err.response.status === 500) {
-        toast.error('There was a problem with the server');
-      } else {
-        toast.error(err.response.data.msg);
+        toast.success('File Uploaded');
+      } catch (err) {
+        if (err.response.status === 500) {
+          toast.error('There was a problem with the server');
+        } else {
+          toast.error(err.response.data.message);
+        }
+        setUploadPercentage(0)
       }
-      setUploadPercentage(0)
     }
   };
 
@@ -67,7 +74,7 @@ const FileUpload = () => {
           </label>
         </div>
 
-        <Progress percentage={uploadPercentage} />
+        {/* <Progress percentage={uploadPercentage} /> */}
 
         <input
           type='submit'
